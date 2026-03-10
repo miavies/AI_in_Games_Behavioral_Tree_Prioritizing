@@ -17,14 +17,14 @@ public class EnemyAI : MonoBehaviour
     private NavMeshAgent agent;
 
     //Behavioral tree basic types
-    private enum NodeStates 
-    { 
+    private enum NodeStates
+    {
         Success, //node completed its job successfully - the condition was true OR action was Finished - I DID IT
         Failure, //the action can't be executed - I CAN'T DO THIS
         Running  //the node is still in progress - moving, waiting, charging(attack)
     }
 
-    private abstract class Node 
+    private abstract class Node
     {
         public abstract NodeStates Tick();
     }
@@ -63,8 +63,8 @@ public class EnemyAI : MonoBehaviour
 
     private class ActionNode : Node
     {
-        private readonly Func<Node> action; //stores a function that returns NodeStates (Cond or action)
-        public ActionNode(Func<Node> action) => this.action = action; //Constructor sets the delegate
+        private readonly Func<NodeStates> action; //stores a function that returns NodeStates (Cond or action)
+        public ActionNode(Func<NodeStates> action) => this.action = action; //Constructor sets the delegate
         public override NodeStates Tick() => action();
     }
 
@@ -133,7 +133,7 @@ public class EnemyAI : MonoBehaviour
         else
         {
             if (d <= loseRange) return NodeStates.Success;
-            isChasing =false;
+            isChasing = false;
             return NodeStates.Failure;
         }
     }
@@ -148,23 +148,28 @@ public class EnemyAI : MonoBehaviour
 
     private NodeStates HasPatrolPoints()
     {
-        if(patrolPoints == null || patrolPoints.Length == 0) return NodeStates.Failure;
+        if (patrolPoints == null || patrolPoints.Length == 0) return NodeStates.Failure;
         return NodeStates.Success;
     }
 
     private NodeStates Patrol()
     {
-        if(isChasing)return NodeStates.Failure;
+        if (isChasing) return NodeStates.Failure;
         Transform current = patrolPoints[patrolIndex];
-        if(current == null) return NodeStates.Failure;
-        
-        if(idleTimer > 0f)
+        if (current == null) return NodeStates.Failure;
+
+        if (idleTimer > 0f)
         {
-            agent.isStopped=true;
+            agent.isStopped = true;
             idleTimer -= Time.deltaTime;
             return NodeStates.Running;
         }
         return NodeStates.Failure;
+    }
+
+    private NodeStates Idle()
+    {
+        return NodeStates.Running;
     }
 }
 
